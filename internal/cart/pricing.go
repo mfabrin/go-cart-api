@@ -2,7 +2,6 @@ package cart
 
 import (
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -45,7 +44,7 @@ func deliveryIncrementPct(delivery, checkout time.Time) (float64, error) {
 	diff := delivery.Sub(checkout)
 
 	if diff < 0 {
-		return 0, errors.New("Delivery date is invalid")
+		return 0, errors.New("the delivery date is before the checkout date")
 	}
 
 	switch {
@@ -82,9 +81,8 @@ func (p Product) UnitPrice(checkoutDate *time.Time) float64 {
 	if checkoutDate != nil {
 		dlvIncrement, err := deliveryIncrementPct(p.DeliveryDate, *checkoutDate)
 
-		if err != nil {
-			fmt.Printf("Unable to calculate delivery increment: %e", err)
-		} else {
+		// a delivery date before checkout gets no delivery increment
+		if err == nil {
 			price += calculatePercentOf(price, dlvIncrement)
 		}
 

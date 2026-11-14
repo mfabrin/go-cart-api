@@ -33,15 +33,17 @@ func TestProductPrice_NoCheckout(t *testing.T) {
 			product:  Product{Quantity: 1, FileType: "PNG"},
 			expected: 1,
 		},
+		{
+			name:     "AI with 5 discount and 10 increment",
+			product:  Product{Quantity: 270, FileType: FileTypeAI},
+			expected: 1.125,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.product.UnitPrice(nil)
-
-			if math.Abs(got-tt.expected) > 1e-9 {
-				t.Errorf("UnitPrice() = %v, want %v", got, tt.expected)
-			}
+			assertFloat(t, got, tt.expected)
 		})
 	}
 }
@@ -90,15 +92,21 @@ func TestProductPrice_WithCheckout(t *testing.T) {
 			},
 			expected: 1,
 		},
+		{
+			name: "PNG: no discount, no increments",
+			product: Product{
+				Quantity:     1,
+				FileType:     "PNG",
+				DeliveryDate: checkoutDate.Add(-10 * time.Hour),
+			},
+			expected: 1,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.product.UnitPrice(&checkoutDate)
-
-			if math.Abs(got-tt.expected) > 1e-9 {
-				t.Errorf("UnitPrice() = %v, want %v", got, tt.expected)
-			}
+			assertFloat(t, got, tt.expected)
 		})
 	}
 }
@@ -111,7 +119,7 @@ func TestDeliveryIncrementPct(t *testing.T) {
 	testCases := []struct {
 		hours    time.Duration
 		expected float64
-		hasError bool
+		wantErr  bool
 	}{
 		{
 			hours:    10 * time.Hour,
@@ -128,7 +136,7 @@ func TestDeliveryIncrementPct(t *testing.T) {
 			hours:    1000 * time.Hour,
 			expected: 0,
 		}, {
-			hasError: true,
+			wantErr:  true,
 			hours:    -80 * time.Hour,
 			expected: 0,
 		},
@@ -143,19 +151,13 @@ func TestDeliveryIncrementPct(t *testing.T) {
 			t.Run(testName, func(t *testing.T) {
 				res, err := deliveryIncrementPct(deliveryDate, cd)
 
-				if !tc.hasError && err != nil {
-					t.Errorf("Got an unexpected error %e", err)
+				gotErr := err != nil
+
+				if gotErr != tc.wantErr {
+					t.Errorf("error = %v, want error: %v", err, tc.wantErr)
 				}
 
-				if tc.hasError {
-					if err == nil {
-						t.Errorf("Error not received")
-					}
-				}
-
-				if res != tc.expected {
-					t.Errorf("Got %v, expected %v", res, tc.expected)
-				}
+				assertFloat(t, res, tc.expected)
 			})
 		}
 	}
@@ -197,11 +199,14 @@ func TestTotalPriceCalculation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			res := test.cart.TotalPrice()
-
-			if res != test.expected {
-				t.Errorf("Got %v, expected %v", res, test.expected)
-			}
-
+			assertFloat(t, res, test.expected)
 		})
+	}
+}
+
+func assertFloat(t *testing.T, got, want float64) {
+	t.Helper()
+	if math.Abs(got-want) > 1e-9 {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
