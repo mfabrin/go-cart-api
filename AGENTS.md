@@ -46,9 +46,9 @@ go test ./... -v -cover
 - [X] `quantityDiscount`, `deliveryIncrementPct`, `fileTypeIncrement`
 - [X] `Product.UnitPrice`, `Cart.TotalPrice`
 - [X] Table-driven tests: no checkout, with checkout, delivery increment
-- [ ] Decide + comment + test behavior for delivery dates **before** checkout (negative diff)
-- [ ] `TestCartTotalPrice` (cart with 2+ items, with and without checkout)
-- [~] Boundary tests: skipped (note: Go uses `< 24h`, TS uses `<= 24h`)
+- [X] Decide + comment + test behavior for delivery dates **before** checkout (no delivery increment)
+- [X] `TestCartTotalPrice` (cart with 2+ items, with and without checkout)
+- [~] Boundary tests: skipped (code now uses `<=` like the TS version)
 - [~] Tidy test names: skipped
 
 ### Step 3: Storage (`store.go`)
