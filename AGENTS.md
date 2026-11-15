@@ -59,10 +59,10 @@ go test ./... -v -cover
 
 ### Step 4: HTTP handlers with Gin (`handlers.go`)
 - [X] `go get github.com/gin-gonic/gin` (run `go mod tidy` to drop `// indirect`)
-- [ ] Request structs with `binding` tags
-- [ ] Response structs (`total_price`, per-item `calculated_price`)
-- [~] 5 handlers (create, update, get, checkout, delete): `Handler` struct + `GetCart`, `CreateCart` reviewed OK; next: `UpdateCart`
-- [ ] Error responses and status codes (400 / 404 / 500)
+- [X] Request structs with `binding` tags
+- [X] Response structs (`total_price`, per-item `unit_price` + `price`, embedding)
+- [X] 5 handlers (create, update, get, checkout, delete)
+- [X] Error responses and status codes (400 / 404 / 500)
 
 ### Step 5: Wiring (`main.go`)
 - [ ] Router group `/api/v1`, inject the store into the handlers
@@ -93,6 +93,8 @@ go test ./... -v -cover
 - Methods with value receivers: `func (p Product) UnitPrice(...)`
 - Tagless `switch`, no fallthrough
 - Maps and the comma-ok idiom: `v, ok := m[k]`
+- Gin binding: `ShouldBindJSON(&req)`, `binding:"required,oneof=a b"`, rules before `dive` hit the slice and after it hit the elements, `required` zero-value trap
+- Struct embedding: promoted fields, JSON flattens embedded structs, shallower field wins on a key clash (response structs extend domain types)
 - `sync.Mutex`: `Lock` + `defer Unlock`, zero value usable, never copy (pointer receivers), goroutine-per-request makes it necessary
 - `time.Time`, `time.Duration` (nanoseconds!), `t.Sub`, `t.Add`, `d.Hours()`
 - Tests: `_test.go`, `testing.T`, table-driven tests, `t.Run`, float comparison with tolerance
