@@ -52,10 +52,10 @@ go test ./... -v -cover
 - [~] Tidy test names: skipped
 
 ### Step 3: Storage (`store.go`)
-- [ ] `CartStore` interface (create, get, update, delete)
-- [ ] In-memory implementation (`map` + `sync.Mutex`)
-- [ ] Sentinel errors (`ErrNotFound`, `ErrAlreadyExists`) and `errors.Is`
-- [ ] Tests
+- [X] `CartStore` interface (create, get, update, delete)
+- [~] In-memory implementation (`map` + `sync.Mutex`): map done, mutex missing
+- [X] Sentinel errors (`ErrNotFound`, `ErrAlreadyExists`) and `errors.Is`
+- [~] Tests: written; review fixes pending (no `switch i`, Update/Delete assertions)
 
 ### Step 4: HTTP handlers with Gin (`handlers.go`)
 - [ ] `go get github.com/gin-gonic/gin`
