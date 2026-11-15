@@ -2,6 +2,7 @@ package cart
 
 import (
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type cartKey struct {
 }
 
 type MemoryStore struct {
+	mu    sync.Mutex
 	carts map[cartKey]Cart
 }
 
@@ -32,6 +34,9 @@ func NewMemoryStore() *MemoryStore {
 }
 
 func (ms *MemoryStore) Get(ecommerceID, customerID string) (Cart, error) {
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
+
 	key := cartKey{ecommerceID, customerID}
 	cart, ok := ms.carts[key]
 
@@ -43,6 +48,9 @@ func (ms *MemoryStore) Get(ecommerceID, customerID string) (Cart, error) {
 }
 
 func (ms *MemoryStore) Create(ecommerceID, customerID string, status Status) (Cart, error) {
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
+
 	key := cartKey{ecommerceID, customerID}
 	_, ok := ms.carts[key]
 
@@ -66,6 +74,9 @@ func (ms *MemoryStore) Create(ecommerceID, customerID string, status Status) (Ca
 }
 
 func (ms *MemoryStore) Update(newCart Cart) (Cart, error) {
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
+
 	key := cartKey{newCart.EcommerceID, newCart.CustomerID}
 
 	cart, ok := ms.carts[key]
@@ -85,6 +96,9 @@ func (ms *MemoryStore) Update(newCart Cart) (Cart, error) {
 }
 
 func (ms *MemoryStore) Delete(ecommerceID, customerID string) error {
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
+
 	key := cartKey{ecommerceID, customerID}
 
 	_, ok := ms.carts[key]

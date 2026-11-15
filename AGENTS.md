@@ -53,15 +53,15 @@ go test ./... -v -cover
 
 ### Step 3: Storage (`store.go`)
 - [X] `CartStore` interface (create, get, update, delete)
-- [~] In-memory implementation (`map` + `sync.Mutex`): map done, mutex missing
+- [X] In-memory implementation (`map` + `sync.Mutex`, `defer Unlock`)
 - [X] Sentinel errors (`ErrNotFound`, `ErrAlreadyExists`) and `errors.Is`
-- [~] Tests: written; review fixes pending (no `switch i`, Update/Delete assertions)
+- [~] Tests: written, `switch i` removed, Update/Delete asserts added; pending (later): Update `Status`/`DateCheckout`/returned value asserts, split Update test, Delete not-found case, shared consts
 
 ### Step 4: HTTP handlers with Gin (`handlers.go`)
-- [ ] `go get github.com/gin-gonic/gin`
+- [X] `go get github.com/gin-gonic/gin` (run `go mod tidy` to drop `// indirect`)
 - [ ] Request structs with `binding` tags
 - [ ] Response structs (`total_price`, per-item `calculated_price`)
-- [ ] 5 handlers (create, update, get, checkout, delete)
+- [~] 5 handlers (create, update, get, checkout, delete): `Handler` struct + `GetCart`, `CreateCart` reviewed OK; next: `UpdateCart`
 - [ ] Error responses and status codes (400 / 404 / 500)
 
 ### Step 5: Wiring (`main.go`)
@@ -93,6 +93,7 @@ go test ./... -v -cover
 - Methods with value receivers: `func (p Product) UnitPrice(...)`
 - Tagless `switch`, no fallthrough
 - Maps and the comma-ok idiom: `v, ok := m[k]`
+- `sync.Mutex`: `Lock` + `defer Unlock`, zero value usable, never copy (pointer receivers), goroutine-per-request makes it necessary
 - `time.Time`, `time.Duration` (nanoseconds!), `t.Sub`, `t.Add`, `d.Hours()`
 - Tests: `_test.go`, `testing.T`, table-driven tests, `t.Run`, float comparison with tolerance
 - Watch a test fail before trusting it
