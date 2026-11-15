@@ -1,8 +1,10 @@
-package cart
+package memory
 
 import (
 	"errors"
 	"testing"
+
+	"cart-api/internal/cart"
 )
 
 const ecommerceTestID = "test-ecommerce-id"
@@ -10,34 +12,34 @@ const customerTestID = "test-customer-id"
 
 func TestCreateTwice_SuccessAndFailure(t *testing.T) {
 	t.Run("Create a cart", func(t *testing.T) {
-		cartStore := NewMemoryStore()
+		ms := New()
 
-		cart, firstErr := cartStore.Create(ecommerceTestID, customerTestID, StatusCreated)
+		c, firstErr := ms.Create(ecommerceTestID, customerTestID, cart.StatusCreated)
 
 		assertFatalError(t, firstErr, nil)
 
-		if !cart.CreatedAt.Equal(cart.UpdatedAt) {
+		if !c.CreatedAt.Equal(c.UpdatedAt) {
 			t.Errorf("createdAt and updatedAt should be equal after creation")
 		}
 
-		assertStrings(t, "ecommerceID", cart.EcommerceID, ecommerceTestID)
-		assertStrings(t, "customerID", cart.CustomerID, customerTestID)
-		assertStatus(t, "status", cart.Status, StatusCreated)
+		assertStrings(t, "ecommerceID", c.EcommerceID, ecommerceTestID)
+		assertStrings(t, "customerID", c.CustomerID, customerTestID)
+		assertStatus(t, "status", c.Status, cart.StatusCreated)
 
-		_, err := cartStore.Create(ecommerceTestID, customerTestID, StatusCreated)
+		_, err := ms.Create(ecommerceTestID, customerTestID, cart.StatusCreated)
 
-		assertError(t, err, ErrAlreadyExists)
+		assertError(t, err, cart.ErrAlreadyExists)
 	})
 }
 
 func TestGet_SuccessAndFailure(t *testing.T) {
-	cartStore := NewMemoryStore()
+	ms := New()
 
 	testEcommerceID := "ecommerceID"
 	testCustomerID := "customerID"
-	testStatus := StatusCreated
+	testStatus := cart.StatusCreated
 
-	_, createErr := cartStore.Create(testEcommerceID, testCustomerID, testStatus)
+	_, createErr := ms.Create(testEcommerceID, testCustomerID, testStatus)
 
 	assertFatalError(t, createErr, nil)
 
@@ -57,14 +59,14 @@ func TestGet_SuccessAndFailure(t *testing.T) {
 			testName:    "Get a non existing cart",
 			ecommerceID: "not-exists-ecommerceID",
 			customerID:  "not-exists-customerID",
-			wantErr:     ErrNotFound,
+			wantErr:     cart.ErrNotFound,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
 
-			cart, err := cartStore.Get(tc.ecommerceID, tc.customerID)
+			cart, err := ms.Get(tc.ecommerceID, tc.customerID)
 
 			assertError(t, err, tc.wantErr)
 
@@ -77,13 +79,13 @@ func TestGet_SuccessAndFailure(t *testing.T) {
 }
 
 func TestUpdate_SuccessAndFailure(t *testing.T) {
-	cartStore := NewMemoryStore()
+	ms := New()
 
 	const testEcommerceID = "ecommerceID"
 	const testCustomerID = "customerID"
-	const testStatus = StatusCreated
+	const testStatus = cart.StatusCreated
 
-	cart, createErr := cartStore.Create(testEcommerceID, testCustomerID, testStatus)
+	c, createErr := ms.Create(testEcommerceID, testCustomerID, testStatus)
 	assertFatalError(t, createErr, nil)
 
 	testCases := []struct {
@@ -94,40 +96,40 @@ func TestUpdate_SuccessAndFailure(t *testing.T) {
 	}{
 		{
 			testName:    "Update existing cart",
-			ecommerceID: cart.EcommerceID,
-			customerID:  cart.CustomerID,
+			ecommerceID: c.EcommerceID,
+			customerID:  c.CustomerID,
 			wantErr:     nil,
 		},
 		{
 			testName:    "Update not existing cart",
 			ecommerceID: "not-existing-ecommerceID",
 			customerID:  "not-existing-customerID",
-			wantErr:     ErrNotFound,
+			wantErr:     cart.ErrNotFound,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
 			if tc.wantErr != nil {
-				dummyCart := Cart{EcommerceID: tc.ecommerceID, CustomerID: tc.customerID}
-				_, err := cartStore.Update(dummyCart)
+				dummyCart := cart.Cart{EcommerceID: tc.ecommerceID, CustomerID: tc.customerID}
+				_, err := ms.Update(dummyCart)
 				assertError(t, err, tc.wantErr)
 			} else {
-				product := Product{ProductSKU: "productSKU", ProductName: "productName", FileType: FileTypeAI, Quantity: 250}
-				cart.ItemList = append(cart.ItemList, product)
+				product := cart.Product{ProductSKU: "productSKU", ProductName: "productName", FileType: cart.FileTypeAI, Quantity: 250}
+				c.ItemList = append(c.ItemList, product)
 
-				_, err := cartStore.Update(cart)
+				_, err := ms.Update(c)
 
 				assertError(t, err, tc.wantErr)
 
-				updatedCart, getErr := cartStore.Get(cart.EcommerceID, cart.CustomerID)
+				updatedCart, getErr := ms.Get(c.EcommerceID, c.CustomerID)
 
 				assertError(t, getErr, nil)
 
 				assertStrings(t, "ecommerceID", updatedCart.EcommerceID, tc.ecommerceID)
 				assertStrings(t, "customerID", updatedCart.CustomerID, tc.customerID)
 
-				if !updatedCart.UpdatedAt.After(cart.UpdatedAt) {
+				if !updatedCart.UpdatedAt.After(c.UpdatedAt) {
 					t.Errorf("updatedAt after the update should be later")
 				}
 
@@ -142,13 +144,13 @@ func TestUpdate_SuccessAndFailure(t *testing.T) {
 }
 
 func TestDelete_SuccessAndFailure(t *testing.T) {
-	cartStore := NewMemoryStore()
+	ms := New()
 
 	const testEcommerceID = "ecommerceID"
 	const testCustomerID = "customerID"
-	const testStatus = StatusCreated
+	const testStatus = cart.StatusCreated
 
-	cart, createErr := cartStore.Create(testEcommerceID, testCustomerID, testStatus)
+	c, createErr := ms.Create(testEcommerceID, testCustomerID, testStatus)
 	assertFatalError(t, createErr, nil)
 
 	testCases := []struct {
@@ -159,25 +161,25 @@ func TestDelete_SuccessAndFailure(t *testing.T) {
 	}{
 		{
 			testName:    "Delete an existing cart",
-			ecommerceID: cart.EcommerceID,
-			customerID:  cart.CustomerID,
+			ecommerceID: c.EcommerceID,
+			customerID:  c.CustomerID,
 			wantErr:     nil,
 		},
 		{
 			testName:    "Delete a not existing cart",
 			ecommerceID: "not-existing-ecommerceID",
 			customerID:  "not-existing-customerID",
-			wantErr:     ErrNotFound,
+			wantErr:     cart.ErrNotFound,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
-			err := cartStore.Delete(tc.ecommerceID, tc.customerID)
+			err := ms.Delete(tc.ecommerceID, tc.customerID)
 			assertError(t, err, tc.wantErr)
 
-			_, getErr := cartStore.Get(tc.ecommerceID, tc.customerID)
-			assertError(t, getErr, ErrNotFound)
+			_, getErr := ms.Get(tc.ecommerceID, tc.customerID)
+			assertError(t, getErr, cart.ErrNotFound)
 		})
 	}
 }
@@ -189,14 +191,14 @@ func assertStrings(t *testing.T, name, got, want string) {
 	}
 }
 
-func assertStatus(t *testing.T, name, got, want Status) {
+func assertStatus(t *testing.T, name, got, want cart.Status) {
 	t.Helper()
 	if got != want {
 		t.Errorf("unexpected %s received: got %s, want %s", name, got, want)
 	}
 }
 
-func assertFileType(t *testing.T, name, got, want FileType) {
+func assertFileType(t *testing.T, name, got, want cart.FileType) {
 	t.Helper()
 	if got != want {
 		t.Errorf("unexpected %s received: got %s, want %s", name, got, want)

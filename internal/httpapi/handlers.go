@@ -51,7 +51,7 @@ type productResponse struct {
 	Price     float64 `json:"price"`
 }
 
-func NewHandler(store cart.CartStore) *Handler {
+func New(store cart.CartStore) *Handler {
 	return &Handler{store: store}
 }
 

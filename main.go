@@ -4,15 +4,15 @@ import (
 	"log"
 	"os"
 
-	"cart-api/internal/cart"
 	"cart-api/internal/httpapi"
+	"cart-api/internal/store/memory"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	ms := cart.NewMemoryStore()
-	handler := httpapi.NewHandler(ms)
+	ms := memory.New()
+	handler := httpapi.New(ms)
 
 	router := gin.Default()
 	api := router.Group("/api/v1")

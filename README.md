@@ -17,8 +17,9 @@ PORT=3000 go run .   # start it on another port
 | Topic | Choice | Why |
 |---|---|---|
 | HTTP framework | **Gin** | Close to Fastify; `binding` tags replace TypeBox validation |
-| Storage | **In-memory** (map + `sync.Mutex`) behind a `CartStore` interface | Simple to start with; MongoDB can be added later |
-| Layout | `main.go` + `internal/cart/` | `internal/` keeps the package private to the module |
+| Storage | **In-memory** (map + `sync.Mutex`) behind a `CartStore` interface | Simple to start with; MongoDB can be added later as another package under `internal/store/` |
+| Layout | `main.go` + `internal/{cart,httpapi,store/memory}` | `internal/` keeps the packages private to the module; packages are split by responsibility, not by kind of type |
+| Dependencies | `httpapi` and `store/memory` import `cart`; `cart` imports neither | The domain package stays free of HTTP and storage details |
 | `date_checkout` | `*time.Time` with `omitempty` | `nil` = not checked out yet; omitted from JSON |
 | Price API | `Product.UnitPrice(checkout)` per unit; `Cart.TotalPrice()` multiplies by quantity | |
 
@@ -28,13 +29,16 @@ PORT=3000 go run .   # start it on another port
 go-cart-api/
   go.mod                      module cart-api
   main.go                     wiring + server start
-  internal/cart/
-    model.go                  Status, FileType, Product, Cart
+  internal/cart/              domain: no HTTP, no storage
+    model.go                  Status, FileType, Product, Cart, CartStore interface, ErrNotFound, ErrAlreadyExists
     pricing.go                pricing policies
     pricing_test.go           table-driven tests
-    store.go                  CartStore interface + in-memory impl (map + mutex)
-    store_test.go             store tests
+  internal/store/memory/
+    memoryStore.go            CartStore implementation (map + mutex)
+    memoryStore_test.go       store tests
+  internal/httpapi/
     handlers.go               Gin handlers, request and response structs
+    handlers_test.go          end-to-end tests with httptest (router + handlers + memory store)
 ```
 
 ## API

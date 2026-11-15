@@ -70,10 +70,17 @@ go test ./... -v -cover
 - [X] Manual test with Bruno
 
 ### Step 6: Optional
-- [ ] Handler tests with `httptest`
-- [ ] Validation: `file_type` in `PDF|PSD|AI`, `quantity > 0`
+- [X] Handler tests with `httptest` (lifecycle, duplicate, 404s, validation 400s, malformed JSON; written by the assistant on request; 500 branches untested, needs a failing fake store)
+- [X] Validation: `file_type` in `PDF|PSD|AI`, `quantity > 0` (done via `binding` tags, covered by tests)
 - [ ] Money rounding (2 decimals / integer cents)
 - [ ] MongoDB implementation of `CartStore`
+
+### Step 7: Package split
+- [X] Handlers moved to `internal/httpapi` (`cart.` prefixes, exported names, shadowed `cart` variable renamed)
+- [X] `MemoryStore` moved to `internal/store/memory` (`memory.New()`, `memory.Store`), tests moved with it
+- [X] `CartStore` interface and `Err...` values stay in `internal/cart` (domain vocabulary)
+- [X] Compile-time check `var _ cart.CartStore = (*Store)(nil)`
+- [ ] Optional: shared `RegisterRoutes` so `main.go` and the handler tests don't duplicate the route table
 
 ### Assessment prep
 - [ ] Rewrite `pricing.go` from scratch without AI
@@ -97,5 +104,13 @@ go test ./... -v -cover
 - Struct embedding: promoted fields, JSON flattens embedded structs, shallower field wins on a key clash (response structs extend domain types)
 - `sync.Mutex`: `Lock` + `defer Unlock`, zero value usable, never copy (pointer receivers), goroutine-per-request makes it necessary
 - `time.Time`, `time.Duration` (nanoseconds!), `t.Sub`, `t.Add`, `d.Hours()`
+- Packages: folder = import path, `package` line = name used in code; organize by domain (`cart`, `store/memory`), not by kind (`models`, `types`)
+- `internal/`: compiler-enforced, only importable from the parent of `internal`
+- Cross-package visibility: only Uppercase names are reachable, referenced as `pkg.Name`
+- A local variable can shadow an imported package name (`cart := ...`): rename it
+- Methods must be declared in the same package as their type
+- Interfaces are satisfied implicitly; define them where they are used; `var _ I = (*T)(nil)` is a compile-time check
+- Package names are part of the identity: `memory.Store`, not `memory.MemoryStore`
+- `net/http/httptest`: `NewRequest`, `NewRecorder`, `router.ServeHTTP`, `gin.TestMode`, `t.Helper()`
 - Tests: `_test.go`, `testing.T`, table-driven tests, `t.Run`, float comparison with tolerance
 - Watch a test fail before trusting it

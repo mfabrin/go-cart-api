@@ -1,6 +1,9 @@
 package cart
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Status string
 
@@ -36,4 +39,16 @@ type Cart struct {
 	DateCheckout *time.Time `json:"date_checkout,omitempty"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
+}
+
+var (
+	ErrNotFound      = errors.New("cart not found")
+	ErrAlreadyExists = errors.New("cart already exists")
+)
+
+type CartStore interface {
+	Create(ecommerceID, customerID string, status Status) (Cart, error)
+	Get(ecommerceID, customerID string) (Cart, error)
+	Update(cart Cart) (Cart, error)
+	Delete(ecommerceID, customerID string) error
 }
