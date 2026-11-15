@@ -5,13 +5,14 @@ import (
 	"os"
 
 	"cart-api/internal/cart"
+	"cart-api/internal/httpapi"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	ms := cart.NewMemoryStore()
-	handler := cart.NewHandler(ms)
+	handler := httpapi.NewHandler(ms)
 
 	router := gin.Default()
 	api := router.Group("/api/v1")

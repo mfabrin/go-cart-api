@@ -1,21 +1,23 @@
-package cart
+package httpapi
 
 import (
 	"errors"
 	"net/http"
 	"time"
 
+	"cart-api/internal/cart"
+
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	store CartStore
+	store cart.CartStore
 }
 
 type createCartRequest struct {
-	EcommerceID string `json:"ecommerce_id" binding:"required"`
-	CustomerID  string `json:"customer_id" binding:"required"`
-	Status      Status `json:"status" binding:"required,oneof=created building checkout"`
+	EcommerceID string      `json:"ecommerce_id" binding:"required"`
+	CustomerID  string      `json:"customer_id" binding:"required"`
+	Status      cart.Status `json:"status" binding:"required,oneof=created building checkout"`
 }
 
 type updateCartRequest struct {
@@ -25,11 +27,11 @@ type updateCartRequest struct {
 }
 
 type updateCartProduct struct {
-	ProductSKU   string    `json:"product_sku" binding:"required"`
-	ProductName  string    `json:"product_name" binding:"required"`
-	FileType     FileType  `json:"file_type" binding:"required,oneof=PDF AI PSD"`
-	Quantity     int       `json:"quantity" binding:"required,gt=0"`
-	DeliveryDate time.Time `json:"delivery_date" binding:"required"`
+	ProductSKU   string        `json:"product_sku" binding:"required"`
+	ProductName  string        `json:"product_name" binding:"required"`
+	FileType     cart.FileType `json:"file_type" binding:"required,oneof=PDF AI PSD"`
+	Quantity     int           `json:"quantity" binding:"required,gt=0"`
+	DeliveryDate time.Time     `json:"delivery_date" binding:"required"`
 }
 
 type checkoutCartRequest struct {
@@ -38,18 +40,18 @@ type checkoutCartRequest struct {
 }
 
 type cartResponse struct {
-	Cart
+	cart.Cart
 	ItemList   []productResponse `json:"item_list"`
 	TotalPrice float64           `json:"total_price"`
 }
 
 type productResponse struct {
-	Product
+	cart.Product
 	UnitPrice float64 `json:"unit_price"`
 	Price     float64 `json:"price"`
 }
 
-func NewHandler(store CartStore) *Handler {
+func NewHandler(store cart.CartStore) *Handler {
 	return &Handler{store: store}
 }
 
@@ -57,9 +59,9 @@ func (h *Handler) GetCart(c *gin.Context) {
 	ecommerceID := c.Param("ecommerce_id")
 	customerID := c.Param("customer_id")
 
-	cart, err := h.store.Get(ecommerceID, customerID)
+	crt, err := h.store.Get(ecommerceID, customerID)
 
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, cart.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
 		return
 	}
@@ -69,10 +71,10 @@ func (h *Handler) GetCart(c *gin.Context) {
 		return
 	}
 
-	itemList := make([]productResponse, 0, len(cart.ItemList))
+	itemList := make([]productResponse, 0, len(crt.ItemList))
 
-	for _, p := range cart.ItemList {
-		unitPrice := p.UnitPrice(cart.DateCheckout)
+	for _, p := range crt.ItemList {
+		unitPrice := p.UnitPrice(crt.DateCheckout)
 		itemList = append(itemList, productResponse{
 			Product:   p,
 			UnitPrice: unitPrice,
@@ -81,9 +83,9 @@ func (h *Handler) GetCart(c *gin.Context) {
 	}
 
 	response := cartResponse{
-		Cart:       cart,
+		Cart:       crt,
 		ItemList:   itemList,
-		TotalPrice: cart.TotalPrice(),
+		TotalPrice: crt.TotalPrice(),
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -97,9 +99,9 @@ func (h *Handler) CreateCart(c *gin.Context) {
 		return
 	}
 
-	cart, err := h.store.Create(body.EcommerceID, body.CustomerID, body.Status)
+	crt, err := h.store.Create(body.EcommerceID, body.CustomerID, body.Status)
 
-	if errors.Is(err, ErrAlreadyExists) {
+	if errors.Is(err, cart.ErrAlreadyExists) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Cart already exists"})
 		return
 	}
@@ -109,7 +111,7 @@ func (h *Handler) CreateCart(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, cart)
+	c.JSON(http.StatusCreated, crt)
 }
 
 func (h *Handler) UpdateCart(c *gin.Context) {
@@ -120,10 +122,10 @@ func (h *Handler) UpdateCart(c *gin.Context) {
 		return
 	}
 
-	itemList := make([]Product, 0, len(body.ItemList))
+	itemList := make([]cart.Product, 0, len(body.ItemList))
 
 	for _, item := range body.ItemList {
-		itemList = append(itemList, Product{
+		itemList = append(itemList, cart.Product{
 			ProductSKU:   item.ProductSKU,
 			ProductName:  item.ProductName,
 			FileType:     item.FileType,
@@ -132,16 +134,16 @@ func (h *Handler) UpdateCart(c *gin.Context) {
 		})
 	}
 
-	request := Cart{
+	request := cart.Cart{
 		EcommerceID: body.EcommerceID,
 		CustomerID:  body.CustomerID,
-		Status:      StatusBuilding,
+		Status:      cart.StatusBuilding,
 		ItemList:    itemList,
 	}
 
 	updatedCart, err := h.store.Update(request)
 
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, cart.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
 		return
 	}
@@ -162,9 +164,9 @@ func (h *Handler) CheckoutCart(c *gin.Context) {
 		return
 	}
 
-	cart, getErr := h.store.Get(body.EcommerceID, body.CustomerID)
+	crt, getErr := h.store.Get(body.EcommerceID, body.CustomerID)
 
-	if errors.Is(getErr, ErrNotFound) {
+	if errors.Is(getErr, cart.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
 		return
 	}
@@ -176,12 +178,12 @@ func (h *Handler) CheckoutCart(c *gin.Context) {
 
 	now := time.Now()
 
-	cart.Status = StatusCheckout
-	cart.DateCheckout = &now
+	crt.Status = cart.StatusCheckout
+	crt.DateCheckout = &now
 
-	updatedCart, updateErr := h.store.Update(cart)
+	updatedCart, updateErr := h.store.Update(crt)
 
-	if errors.Is(updateErr, ErrNotFound) {
+	if errors.Is(updateErr, cart.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
 		return
 	}
@@ -200,7 +202,7 @@ func (h *Handler) DeleteCart(c *gin.Context) {
 
 	err := h.store.Delete(ecommerceID, customerID)
 
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, cart.ErrNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
 		return
 	}
