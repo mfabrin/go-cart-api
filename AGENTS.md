@@ -65,9 +65,9 @@ go test ./... -v -cover
 - [X] Error responses and status codes (400 / 404 / 500)
 
 ### Step 5: Wiring (`main.go`)
-- [ ] Router group `/api/v1`, inject the store into the handlers
-- [ ] `PORT` from env with default
-- [ ] Manual test with `curl`
+- [X] Router group `/api/v1`, inject the store into the handlers
+- [X] `PORT` from env with default
+- [X] Manual test with Bruno
 
 ### Step 6: Optional
 - [ ] Handler tests with `httptest`

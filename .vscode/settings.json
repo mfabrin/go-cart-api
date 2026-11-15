@@ -1,0 +1,11 @@
+{
+  "gopls": {
+    "formatting.local": "cart-api"
+  },
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  }
+}
