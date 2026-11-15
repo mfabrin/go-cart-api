@@ -17,8 +17,9 @@ func main() {
 
 	api.GET("/cart/get/:ecommerce_id/:customer_id", handler.GetCart)
 	api.POST("/cart/create", handler.CreateCart)
-	api.PUT("/cart/checkout", handler.UpdateCart)
-	api.PUT("/cart/delete/:ecommerce_id/:customer_id", handler.DeleteCart)
+	api.PUT("/cart/update", handler.UpdateCart)
+	api.PUT("/cart/checkout", handler.CheckoutCart)
+	api.DELETE("/cart/delete/:ecommerce_id/:customer_id", handler.DeleteCart)
 
 	port := os.Getenv("PORT")
 
