@@ -48,8 +48,8 @@ go test ./... -v -cover
 - [X] Table-driven tests: no checkout, with checkout, delivery increment
 - [X] Decide + comment + test behavior for delivery dates **before** checkout (no delivery increment)
 - [X] `TestCartTotalPrice` (cart with 2+ items, with and without checkout)
-- [~] Boundary tests: skipped (code now uses `<=` like the TS version)
-- [~] Tidy test names: skipped
+- [X] Boundary tests (`TestQuantityDiscount` edges at 100/250/500/1000, delivery edges at 0/24h/48h/72h ± 1ns, negative offset)
+- [X] Tidy test names (no `%%`, distinct row names, `TestCartTotalPrice`)
 
 ### Step 3: Storage (`store.go`)
 - [X] `CartStore` interface (create, get, update, delete)

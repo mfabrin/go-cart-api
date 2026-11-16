@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestProductPrice_NoCheckout(t *testing.T) {
+func TestProductUnitPrice_NoCheckout(t *testing.T) {
 	tests := []struct {
 		name     string
 		product  Product
@@ -48,7 +48,7 @@ func TestProductPrice_NoCheckout(t *testing.T) {
 	}
 }
 
-func TestProductPrice_WithCheckout(t *testing.T) {
+func TestProductUnitPrice_WithCheckout(t *testing.T) {
 	checkoutDate := time.Date(2026, 11, 14, 5, 0, 0, 0, time.UTC)
 
 	tests := []struct {
@@ -57,7 +57,7 @@ func TestProductPrice_WithCheckout(t *testing.T) {
 		expected float64
 	}{
 		{
-			name: "PDF: no discount, 30%% checkout increment",
+			name: "PDF: no discount, 30% checkout increment",
 			product: Product{
 				Quantity:     1,
 				FileType:     FileTypePDF,
@@ -75,7 +75,7 @@ func TestProductPrice_WithCheckout(t *testing.T) {
 			expected: 1.2825,
 		},
 		{
-			name: "AI: 20 discount, 10%% increment by checkout",
+			name: "AI: 20 discount, 10% increment by checkout",
 			product: Product{
 				Quantity:     1001,
 				FileType:     FileTypeAI,
@@ -93,7 +93,7 @@ func TestProductPrice_WithCheckout(t *testing.T) {
 			expected: 1,
 		},
 		{
-			name: "PNG: no discount, no increments",
+			name: "PNG: no discount AND no increments because of delivery date in the past",
 			product: Product{
 				Quantity:     1,
 				FileType:     "PNG",
@@ -112,9 +112,7 @@ func TestProductPrice_WithCheckout(t *testing.T) {
 }
 
 func TestQuantityDiscount(t *testing.T) {
-
 	testCases := []struct {
-		testName string
 		quantity int
 		want     float64
 	}{
@@ -136,7 +134,6 @@ func TestQuantityDiscount(t *testing.T) {
 			pct := quantityDiscount(tc.quantity)
 			assertFloat(t, pct, tc.want)
 		})
-
 	}
 }
 
@@ -150,7 +147,7 @@ func TestDeliveryIncrementPct(t *testing.T) {
 		want    float64
 		wantErr bool
 	}{
-		{offset: 0 * time.Hour, want: 30},
+		{offset: 0, want: 30},
 		{offset: 24 * time.Hour, want: 30},
 		{offset: 24*time.Hour + time.Nanosecond, want: 20},
 		{offset: 48 * time.Hour, want: 20},
@@ -183,7 +180,7 @@ func TestDeliveryIncrementPct(t *testing.T) {
 	}
 }
 
-func TestTotalPriceCalculation(t *testing.T) {
+func TestCartTotalPrice(t *testing.T) {
 	checkoutDate := time.Date(2026, 11, 10, 10, 0, 0, 0, time.UTC)
 
 	tests := []struct {
