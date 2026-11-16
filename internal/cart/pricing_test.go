@@ -111,42 +111,62 @@ func TestProductPrice_WithCheckout(t *testing.T) {
 	}
 }
 
+func TestQuantityDiscount(t *testing.T) {
+
+	testCases := []struct {
+		testName string
+		quantity int
+		want     float64
+	}{
+		{quantity: 0, want: 0},
+		{quantity: 1, want: 0},
+		{quantity: 100, want: 0},
+		{quantity: 101, want: 5},
+		{quantity: 250, want: 5},
+		{quantity: 251, want: 10},
+		{quantity: 500, want: 10},
+		{quantity: 501, want: 15},
+		{quantity: 1000, want: 15},
+		{quantity: 1001, want: 20},
+	}
+
+	for _, tc := range testCases {
+		testName := fmt.Sprintf("get %v discount with %d quantity", tc.want, tc.quantity)
+		t.Run(testName, func(t *testing.T) {
+			pct := quantityDiscount(tc.quantity)
+			assertFloat(t, pct, tc.want)
+		})
+
+	}
+}
+
 func TestDeliveryIncrementPct(t *testing.T) {
 	checkoutToday := time.Date(2026, 11, 14, 1, 0, 0, 0, time.UTC)
 	checkoutFiveDaysAgo := time.Date(2026, 11, 9, 1, 0, 0, 0, time.UTC)
 
 	checkoutDates := []time.Time{checkoutToday, checkoutFiveDaysAgo}
 	testCases := []struct {
-		hours    time.Duration
-		expected float64
-		wantErr  bool
+		offset  time.Duration
+		want    float64
+		wantErr bool
 	}{
-		{
-			hours:    10 * time.Hour,
-			expected: 30,
-		},
-		{
-			hours:    30 * time.Hour,
-			expected: 20,
-		},
-		{
-			hours:    70 * time.Hour,
-			expected: 10,
-		}, {
-			hours:    1000 * time.Hour,
-			expected: 0,
-		}, {
-			wantErr:  true,
-			hours:    -80 * time.Hour,
-			expected: 0,
-		},
+		{offset: 0 * time.Hour, want: 30},
+		{offset: 24 * time.Hour, want: 30},
+		{offset: 24*time.Hour + time.Nanosecond, want: 20},
+		{offset: 48 * time.Hour, want: 20},
+		{offset: 48*time.Hour + time.Nanosecond, want: 10},
+		{offset: 72 * time.Hour, want: 10},
+		{offset: 72*time.Hour + time.Nanosecond, want: 0},
+		{offset: 1000 * time.Hour, want: 0},
+		{wantErr: true, offset: -80 * time.Hour, want: 0},
+		{wantErr: true, offset: -1 * time.Nanosecond, want: 0},
 	}
 
 	for _, cd := range checkoutDates {
 		for _, tc := range testCases {
-			deliveryDate := cd.Add(tc.hours)
+			deliveryDate := cd.Add(tc.offset)
 
-			testName := fmt.Sprintf("%s: %s -> %v", cd.String(), tc.hours.String(), tc.expected)
+			testName := fmt.Sprintf("%s: %s -> %v", cd.String(), tc.offset.String(), tc.want)
 
 			t.Run(testName, func(t *testing.T) {
 				res, err := deliveryIncrementPct(deliveryDate, cd)
@@ -157,7 +177,7 @@ func TestDeliveryIncrementPct(t *testing.T) {
 					t.Errorf("error = %v, want error: %v", err, tc.wantErr)
 				}
 
-				assertFloat(t, res, tc.expected)
+				assertFloat(t, res, tc.want)
 			})
 		}
 	}
