@@ -1,0 +1,30 @@
+info:
+  name: cart create
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/cart/create"
+  body:
+    type: json
+    data: |-
+      {
+        "ecommerce_id": "{{ecommerceId}}",
+        "customer_id": "{{customerId}}",
+        "status": "created"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: ecommerceId
+      value: e1
+    - name: customerId
+      value: c1
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

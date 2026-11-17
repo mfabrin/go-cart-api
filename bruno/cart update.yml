@@ -1,0 +1,45 @@
+info:
+  name: cart update
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/v1/cart/update"
+  body:
+    type: json
+    data: |-
+      {
+        "ecommerce_id": "{{ecommerceId}}",
+        "customer_id": "{{customerId}}",
+        "item_list": [
+          {
+            "product_sku": "SKU-001",
+            "product_name": "Business cards",
+            "file_type": "PDF",
+            "quantity": 300,
+            "delivery_date": "2026-12-01T10:00:00Z"
+          },
+          {
+            "product_sku": "SKU-002",
+            "product_name": "Poster",
+            "file_type": "PSD",
+            "quantity": 50,
+            "delivery_date": "2026-12-05T10:00:00Z"
+          }
+        ]
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: ecommerceId
+      value: e1
+    - name: customerId
+      value: c1
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

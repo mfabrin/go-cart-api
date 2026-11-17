@@ -1,0 +1,29 @@
+info:
+  name: cart checkout
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/v1/cart/checkout"
+  body:
+    type: json
+    data: |-
+      {
+        "ecommerce_id": "{{ecommerceId}}",
+        "customer_id": "{{customerId}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: ecommerceId
+      value: e1
+    - name: customerId
+      value: c1
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
