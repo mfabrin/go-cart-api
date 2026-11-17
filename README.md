@@ -12,6 +12,17 @@ PORT=3000 go run .   # start it on another port
 
 `PORT` is read from the environment and defaults to `8081`.
 
+## Manual testing with Bruno
+
+The [`bruno/`](bruno/) folder is a [Bruno](https://www.usebruno.com/) collection in YAML (OpenCollection) format.
+
+1. Start the server (`go run .`)
+2. In Bruno: **Open Collection** → select the `bruno/` folder
+3. Select the `localhost` environment (sets `baseUrl` to `http://localhost:8081/api`; change it if you use another `PORT`)
+4. Run the requests in order: create → get → update → checkout → delete
+
+Each request sets `ecommerceId` and `customerId` (`e1` / `c1`) as request variables.
+
 ## Technical decisions
 
 | Topic | Choice | Why |
@@ -39,6 +50,8 @@ go-cart-api/
   internal/httpapi/
     handlers.go               Gin handlers, request and response structs
     handlers_test.go          end-to-end tests with httptest (router + handlers + memory store)
+  bruno/                      Bruno collection for manual testing
+    environments/localhost.yml
 ```
 
 ## API

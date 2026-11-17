@@ -68,6 +68,7 @@ go test ./... -v -cover
 - [X] Router group `/api/v1`, inject the store into the handlers
 - [X] `PORT` from env with default
 - [X] Manual test with Bruno
+- [X] Bruno collection in `bruno/` (YAML format, `localhost` environment); optional: move `ecommerceId`/`customerId` from per-request vars into the environment
 
 ### Step 6: Optional
 - [X] Handler tests with `httptest` (lifecycle, duplicate, 404s, validation 400s, malformed JSON; written by the assistant on request; 500 branches untested, needs a failing fake store)
